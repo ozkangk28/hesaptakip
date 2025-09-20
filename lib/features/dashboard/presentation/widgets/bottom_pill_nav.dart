@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:hesaptakip/core/theme/app_theme.dart';
 
-class BottomPillNav extends StatefulWidget {
-  const BottomPillNav({super.key, required this.onTap});
+class BottomPillNav extends StatelessWidget {
+  const BottomPillNav({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  final int currentIndex;
   final ValueChanged<int> onTap;
-
-  @override
-  State<BottomPillNav> createState() => _BottomPillNavState();
-}
-
-class _BottomPillNavState extends State<BottomPillNav> {
-  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +36,10 @@ class _BottomPillNavState extends State<BottomPillNav> {
   }
 
   Widget _item({required IconData icon, required String label, required int i}) {
-    final selected = _index == i;
+    final selected = currentIndex == i;
     return Expanded(
       child: InkWell(
-        onTap: () {
-          setState(() => _index = i);
-          widget.onTap(i);
-        },
+        onTap: () => onTap(i),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

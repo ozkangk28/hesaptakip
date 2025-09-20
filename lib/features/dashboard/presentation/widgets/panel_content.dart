@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:hesaptakip/core/theme/app_theme.dart';
 import 'package:hesaptakip/features/dashboard/domain/models/finance_models.dart';
 import 'package:hesaptakip/features/dashboard/presentation/widgets/transaction_details_dialog.dart';
+import 'package:hesaptakip/features/profile/presentation/profile_sheet.dart'; // ✅ Profil sheet import edildi
 
 class PanelContent extends StatelessWidget {
   const PanelContent({
@@ -55,10 +56,21 @@ class PanelContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Colors.white24,
-                  child: const Icon(Icons.person, color: Colors.white),
+                // ✅ Tıklanabilir profil ikonu
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => const ProfileSheet(),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Colors.white24,
+                    child: Icon(Icons.person, color: Colors.white),
+                  ),
                 ),
               ],
             ),

@@ -4,8 +4,7 @@ import 'package:hesaptakip/core/theme/app_theme.dart';
 import 'package:hesaptakip/features/dashboard/domain/models/finance_models.dart';
 import 'package:hesaptakip/features/dashboard/domain/repositories/finance_repository.dart';
 import 'package:hesaptakip/features/dashboard/data/repositories/finance_repository_mock.dart';
-
-// 🔹 Yeni eklenen importlar
+import 'package:hesaptakip/features/profile/presentation/profile_sheet.dart';
 import 'package:hesaptakip/features/dashboard/presentation/widgets/panel_content.dart';
 import 'package:hesaptakip/features/dashboard/presentation/widgets/bottom_pill_nav.dart';
 import 'package:hesaptakip/features/dashboard/presentation/widgets/add_transaction_dialog.dart';
@@ -14,7 +13,6 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.repository, this.preloaded});
   final FinanceRepository? repository;
 
-  /// (Opsiyonel) Login'den hazır veri verilirse FutureBuilder beklenmez.
   final DashboardData? preloaded;
 
   @override
@@ -24,6 +22,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late final FinanceRepository _repo;
   late final NumberFormat _tl;
+
+  int _selectedIndex = 0; // 0=Ana Sayfa, 1=Ekle, 2=Raporlar
+  bool _navigatedToForm = false; // ekleme formuna gidildi mi?
 
   @override
   void initState() {
@@ -69,7 +70,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildContent(DashboardData data) {
     return Stack(
       children: [
-        // Büyük, köşeleri yuvarlatılmış koyu panel
         Positioned.fill(
           top: 12,
           left: 12,
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: PanelContent(
                       userName: data.userName,
                       summary: data.summary,
-                      transactions: data.lastTransactions,
+                      transactions: data.lastTransactions.take(10).toList(),
                       tl: _tl,
                     ),
                   ),
@@ -104,16 +104,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        // Alt: oval sekme çubuğu
+        // 🔹 Alt Menü
         Positioned(
           left: 16,
           right: 16,
           bottom: 16,
           child: BottomPillNav(
+            currentIndex: _selectedIndex,
             onTap: (i) {
               if (i == 1) {
-                _openAddDialog(); // merkezde seçenek paneli
+                setState(() => _selectedIndex = 1); // Ekle aktif
+                _openAddDialog();
               } else {
+                setState(() => _selectedIndex = i);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -129,8 +132,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ========= Merkezde açılan "Ekle" paneli =========
-  Future<void> _openAddDialog() async {
-    await showGeneralDialog(
+  Future<void> _openAddDialog() {
+    _navigatedToForm = false; // panel açılırken sıfırla
+
+    return showGeneralDialog(
       context: context,
       barrierLabel: 'Ekle',
       barrierDismissible: true,
@@ -149,7 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Başlık + sağ üst çarpı
                     Row(
                       children: [
                         const Expanded(
@@ -172,7 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // 2x2 seçenek grid
                     GridView.count(
                       crossAxisCount: 2,
                       shrinkWrap: true,
@@ -185,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           label: 'Gelir',
                           color: AppColors.success,
                           onTap: () {
+                            _navigatedToForm = true;
                             Navigator.pop(context);
                             _openAddForm(TransactionType.income);
                           },
@@ -194,6 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           label: 'Gider',
                           color: AppColors.danger,
                           onTap: () {
+                            _navigatedToForm = true;
                             Navigator.pop(context);
                             _openAddForm(TransactionType.expense);
                           },
@@ -203,6 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           label: 'Alacak',
                           color: AppColors.gold,
                           onTap: () {
+                            _navigatedToForm = true;
                             Navigator.pop(context);
                             _openAddForm(TransactionType.receivable);
                           },
@@ -212,13 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           label: 'Borç',
                           color: AppColors.neutral600,
                           onTap: () {
+                            _navigatedToForm = true;
                             Navigator.pop(context);
                             _openAddForm(TransactionType.payable);
                           },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -227,13 +233,19 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       transitionBuilder: (_, anim, __, child) {
-        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
+        final curved =
+        CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
         return FadeTransition(
           opacity: anim,
           child: ScaleTransition(scale: curved, child: child),
         );
       },
-    );
+    ).then((_) {
+      // 🔹 sadece form açılmadıysa (panel kapatıldıysa) Ana Sayfa yanar
+      if (!_navigatedToForm) {
+        setState(() => _selectedIndex = 0);
+      }
+    });
   }
 
   // ========= İşlem ekleme diyaloğunu çağır =========
@@ -249,16 +261,17 @@ class _HomeScreenState extends State<HomeScreen> {
           type: type,
           onSaved: (tx) async {
             await _repo.addTransaction(tx);
-            setState(() {});
+            setState(() => _selectedIndex = 0); // işlem kaydedilince Ana Sayfa
           },
         );
       },
     );
 
+    // Kullanıcı formu iptal ederse de Ana Sayfa
+    setState(() => _selectedIndex = 0);
   }
 }
 
-// ---------------- Ekle panelindeki kutucuk ----------------
 class _AddTile extends StatelessWidget {
   const _AddTile({
     required this.icon,
