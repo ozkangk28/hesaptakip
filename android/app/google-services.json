@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056056013143",
+    "project_id": "hesaptakip-fb28c",
+    "storage_bucket": "hesaptakip-fb28c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056056013143:android:008ae84c442213e79d8e12",
+        "android_client_info": {
+          "package_name": "com.example.hesaptakip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaTDr2-cdRRXQAGJCoFZvQDdyyj1MbaBQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
